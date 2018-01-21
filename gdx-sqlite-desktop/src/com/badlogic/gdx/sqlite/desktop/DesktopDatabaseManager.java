@@ -26,6 +26,8 @@ public class DesktopDatabaseManager implements DatabaseManager {
 		private final int dbVersion;
 		private final String dbOnCreateQuery;
 		private final String dbOnUpgradeQuery;
+		
+		private boolean withResource = false;
 
 		private Connection connection = null;
 		private Statement stmt = null;
@@ -47,17 +49,30 @@ public class DesktopDatabaseManager implements DatabaseManager {
 				throw new GdxRuntimeException(e);
 			}
 		}
+		
+		public void setResource(boolean res){
+			this.withResource = res;	
+		}
 
 		@Override
 		public void openOrCreateDatabase () throws SQLiteGdxException {
 			if (helper == null) helper = new SQLiteDatabaseHelper(dbName, dbVersion, dbOnCreateQuery, dbOnUpgradeQuery);
-
-			try {
-				connection = DriverManager.getConnection("jdbc:sqlite:" + dbName);
-				stmt = connection.createStatement();
-				helper.onCreate(stmt);
-			} catch (SQLException e) {
-				throw new SQLiteGdxException(e);
+			if(this.withResource){
+				try {
+					connection = DriverManager.getConnection("jdbc:sqlite:resource:" + dbName);
+					stmt = connection.createStatement();
+					helper.onCreate(stmt);
+				} catch (SQLException e) {
+					throw new SQLiteGdxException(e);
+				}
+			} else {
+				try {
+					connection = DriverManager.getConnection("jdbc:sqlite:" + dbName);
+					stmt = connection.createStatement();
+					helper.onCreate(stmt);
+				} catch (SQLException e) {
+					throw new SQLiteGdxException(e);
+				}
 			}
 		}
 
